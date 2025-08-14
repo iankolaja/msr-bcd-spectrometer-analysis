@@ -1,0 +1,65 @@
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 30070.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 34080.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 52123.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 52130.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 54134.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 54136.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 58142.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 63151.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:02:55 2024 (seed = 12345)
+Warning message from function CheckNuclideData:
+
+Stable nuclide 64160.02c has 1 decay modes
+
+
+***** Fri Oct 25 19:26:36 2024 (seed = 12345)
+Warning message from function SamplePrecursorGroup:
+
+Precursor group sampling failed (92235.02c, mt 18, E = 2.692765E-02)
+
+
+Simulation completed.
+------------------------------------------------------------
+Fri Oct 25 19:31:34 2024  (errors: 0, warnings: 10, notes: 0)
+

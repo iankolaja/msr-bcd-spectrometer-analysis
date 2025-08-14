@@ -1,0 +1,35 @@
+#!/bin/bash
+# Job name:
+#SBATCH --job-name=name
+#
+# Partition:
+#SBATCH --partition=savio2
+#
+# Account:
+# SBATCH --account=co_nuclear
+#SBATCH --account=fc_neutronics
+#
+# QoS:
+# #SBATCH --qos=nuclear_normal
+#SBATCH --qos=savio_normal
+#
+# Processors:
+# #SBATCH --nodes=1
+#SBATCH --ntasks=96
+# #SBATCH --constraint=savio2_c28
+#
+# Memory:
+#SBATCH --mem=0
+#
+# Wall clock limit:
+#SBATCH --time=72:00:00
+#
+## Run command
+module load intel
+# module load openmpi
+# mpirun mcnp6.mpi i=test
+# mpirun sss your_input
+# mpirun sss2 serpent_test
+# mpirun sss2_2_0 main_strip -omp 24
+sss2_2_0 mcfr -omp 96
+
