@@ -1,0 +1,252 @@
+surf infinite inf
+
+
+surf bound_left pz -2.5 
+surf bound_right pz 2.5
+surf salt_outer cylz 0.0 0.0 6.40969
+surf pipe_outer cylz 0.0 0.0 7.06501
+surf ss310_reflector_outer cylz 0.0 0.0 7.21741
+surf silver_layer_outer cylz 0.0 0.0 7.22249
+
+surf steel_layer_1_outer cylz 0.0 0.0 7.23773
+surf air_layer_1_outer cylz 0.0 0.0 8.15213
+
+surf steel_layer_2_outer cylz 0.0 0.0 8.16737
+surf air_layer_2_outer cylz 0.0 0.0 9.08177
+
+surf steel_layer_3_outer cylz 0.0 0.0 9.09701
+surf air_layer_3_outer cylz 0.0 0.0 10.01141
+
+surf steel_layer_4_outer cylz 0.0 0.0 10.02665
+surf air_layer_4_outer cylz 0.0 0.0 10.94105
+
+surf steel_layer_5_outer cylz 0.0 0.0 10.95629
+surf air_layer_5_outer cylz 0.0 0.0 11.87069
+
+surf steel_layer_6_outer cylz 0.0 0.0 11.88593
+surf air_layer_6_outer cylz 0.0 0.0 12.80033
+
+surf steel_layer_7_outer cylz 0.0 0.0 12.81557
+surf air_layer_7_outer cylz 0.0 0.0 13.72997
+
+surf steel_layer_8_outer cylz 0.0 0.0 13.74521
+surf air_layer_8_outer cylz 0.0 0.0 14.65961
+
+surf steel_layer_9_outer cylz  0.0 0.0 14.67485
+
+surf outer_most_layer cylz 0.0 0.0 14.79677
+surf boundary cylz 0.0 0.0 15.0 -2.7 2.7
+
+cell salt      0  fuel_salt_source_burnt        bound_left -bound_right -salt_outer
+cell pipe      0  carbon_steel                   bound_left -bound_right salt_outer -pipe_outer
+cell reflector 0  stainless_steel_310            bound_left -bound_right pipe_outer -ss310_reflector_outer
+cell silver    0  pure_silver                    bound_left -bound_right ss310_reflector_outer -silver_layer_outer
+cell steel1    0  stainless_steel_321            bound_left -bound_right silver_layer_outer -steel_layer_1_outer
+cell air1      0  void                           bound_left -bound_right steel_layer_1_outer -air_layer_1_outer
+cell steel2    0  stainless_steel_321            bound_left -bound_right air_layer_1_outer -steel_layer_2_outer
+cell air2      0  void                           bound_left -bound_right steel_layer_2_outer -air_layer_2_outer
+cell steel3    0  stainless_steel_321            bound_left -bound_right air_layer_2_outer -steel_layer_3_outer
+cell air3      0  void                           bound_left -bound_right steel_layer_3_outer -air_layer_3_outer
+cell steel4    0  stainless_steel_321            bound_left -bound_right air_layer_3_outer -steel_layer_4_outer
+cell air4      0  void                           bound_left -bound_right steel_layer_4_outer -air_layer_4_outer
+cell steel5    0  stainless_steel_321            bound_left -bound_right air_layer_4_outer -steel_layer_5_outer
+cell air5      0  void                           bound_left -bound_right steel_layer_5_outer -air_layer_5_outer
+cell steel6    0  stainless_steel_321            bound_left -bound_right air_layer_5_outer -steel_layer_6_outer
+cell air6      0  void                           bound_left -bound_right steel_layer_6_outer -air_layer_6_outer
+cell steel7    0  stainless_steel_321            bound_left -bound_right air_layer_6_outer -steel_layer_7_outer
+cell air7      0  void                           bound_left -bound_right steel_layer_7_outer -air_layer_7_outer
+cell steel8    0  stainless_steel_321            bound_left -bound_right air_layer_7_outer -steel_layer_8_outer
+cell air8      0  void                           bound_left -bound_right steel_layer_8_outer -air_layer_8_outer
+cell steel9    0  stainless_steel_321            bound_left -bound_right air_layer_8_outer -steel_layer_9_outer
+cell outermost 0  stainless_steel_304            bound_left -bound_right steel_layer_9_outer -outer_most_layer
+
+cell gap       0  void                           outer_most_layer -boundary
+cell gap_left  0  void                           -outer_most_layer -bound_left
+cell gap_right  0  void                          -outer_most_layer  bound_right
+cell boundary  0  outside                        boundary
+
+
+
+% Assume temperature at 1200F -> 922.0389K
+
+% mat air -1.20500E-03 rgb 232 226 254 tmp 922.0389
+%  6012.02c  -1.24000E-04
+%  7014.02c  -7.52324E-01
+%  7015.02c  -2.94416E-03
+%  8016.02c  -2.31781E-01
+% 18036.02c  -3.88624E-05
+% 18038.02c  -7.70386E-06
+% 18040.02c  -1.27804E-02
+
+mat carbon_steel -7.872 rgb 60 60 60 tmp 922.0389
+ 6012.02c  -4.05250E-04
+ 6013.02c  -4.74956E-06
+26054.02c  -5.61733E-02
+26056.02c  -9.14420E-01
+26057.02c  -2.14957E-02
+26058.02c  -2.91082E-03
+
+mat stainless_steel_316 -8.0 rgb 132 235 75 tmp 922.0389
+ 6012.02c  -4.05250E-04
+ 6013.02c  -4.74956E-06
+14028.02c  -4.65763E-03
+14029.02c  -2.45065E-04
+14030.02c  -1.67304E-04
+15031.02c  -2.30000E-04
+16032.02c  -1.42073E-04
+16033.02c  -1.15681E-06
+16034.02c  -6.75336E-06
+16036.02c  -1.68255E-08
+24050.02c  -7.09527E-03
+24052.02c  -1.42289E-01
+24053.02c  -1.64451E-02
+24054.02c  -4.17072E-03
+25055.02c  -1.01400E-02
+26054.02c  -3.77688E-02
+26056.02c  -6.14821E-01
+26057.02c  -1.44529E-02
+26058.02c  -1.95712E-03
+28058.02c  -8.06372E-02
+28060.02c  -3.21312E-02
+28061.02c  -1.42003E-03
+28062.02c  -4.60179E-03
+28064.02c  -1.20978E-03
+42092.02c  -3.53736E-03
+42094.02c  -2.25861E-03
+42095.02c  -3.93225E-03
+42096.02c  -4.16857E-03
+42097.02c  -2.41413E-03
+42098.02c  -6.17154E-03
+42100.02c  -2.51754E-03
+
+mat stainless_steel_321 -8.0 rgb 112 112 112 tmp 922.0389
+ 6012.02c  -7.90733E-04
+ 6013.02c  -9.26744E-06
+14028.02c  -9.18665E-03
+14029.02c  -4.83363E-04
+14030.02c  -3.29988E-04
+15031.02c  -4.50000E-04
+16032.02c  -2.84146E-04
+16033.02c  -2.31362E-06
+16034.02c  -1.35067E-05
+16036.02c  -3.36510E-08
+22046.02c  -1.18801E-04
+22047.02c  -1.09467E-04
+22048.02c  -1.10768E-03
+22049.02c  -8.29829E-05
+22050.02c  -8.10732E-05
+24050.02c  -7.51264E-03
+24052.02c  -1.50659E-01
+24053.02c  -1.74125E-02
+24054.02c  -4.41606E-03
+25055.02c  -2.00000E-02
+26054.02c  -3.82176E-02
+26056.02c  -6.22127E-01
+26057.02c  -1.46246E-02
+26058.02c  -1.98038E-03
+28058.02c  -7.39175E-02
+28060.02c  -2.94536E-02
+28061.02c  -1.30169E-03
+28062.02c  -4.21830E-03
+28064.02c  -1.10897E-03
+
+
+mat pure_silver -1.05000E+01  rgb 213 213 213 tmp 922.0389
+47107.02c   -5.13718E-01
+47109.02c   -4.86282E-01
+
+
+mat stainless_steel_304 -8.00000E+00  rgb 135 135 135 tmp 922.0389
+ 6012.02c  -3.95366E-04
+ 6013.02c  -4.63372E-06
+14028.02c  -4.59332E-03
+14029.02c  -2.41681E-04
+14030.02c  -1.64994E-04
+15031.02c  -2.30000E-04
+16032.02c  -1.42073E-04
+16033.02c  -1.15681E-06
+16034.02c  -6.75336E-06
+16036.02c  -1.68255E-08
+24050.02c  -7.93000E-03
+24052.02c  -1.59029E-01
+24053.02c  -1.83798E-02
+24054.02c  -4.66139E-03
+25055.02c  -1.00000E-02
+26054.02c  -3.96166E-02
+26056.02c  -6.44901E-01
+26057.02c  -1.51600E-02
+26058.02c  -2.05287E-03
+28058.02c  -6.21579E-02
+28060.02c  -2.47678E-02
+28061.02c  -1.09461E-03
+28062.02c  -3.54721E-03
+28064.02c  -9.32539E-04
+
+% TODO: Placeholder
+mat stainless_steel_310 -8.00000E+00  rgb 157 157 157 tmp 922.0389
+ 6012.02c  -3.95366E-04
+ 6013.02c  -4.63372E-06
+14028.02c  -4.59332E-03
+14029.02c  -2.41681E-04
+14030.02c  -1.64994E-04
+15031.02c  -2.30000E-04
+16032.02c  -1.42073E-04
+16033.02c  -1.15681E-06
+16034.02c  -6.75336E-06
+16036.02c  -1.68255E-08
+24050.02c  -7.93000E-03
+24052.02c  -1.59029E-01
+24053.02c  -1.83798E-02
+24054.02c  -4.66139E-03
+25055.02c  -1.00000E-02
+26054.02c  -3.96166E-02
+26056.02c  -6.44901E-01
+26057.02c  -1.51600E-02
+26058.02c  -2.05287E-03
+28058.02c  -6.21579E-02
+28060.02c  -2.47678E-02
+28061.02c  -1.09461E-03
+28062.02c  -3.54721E-03
+28064.02c  -9.32539E-04
+
+
+mat fuel_salt_fresh  -3.03334 tmp 973
+11023.02c  2.51880E-01
+17035.02c  4.72913E-01
+17037.02c  1.51147E-01
+92235.02c  2.45019E-02
+92238.02c  9.95583E-02
+
+
+% unit cell MCFR at half of its max burnup value
+mat fuel_salt_source_burnt sum fix 02c 922 rgb 255 246 51  tmp 922.0389 vol 645.35
+  <concentration>
+
+
+
+src decay p
+  sg fuel_salt_source_burnt 1
+
+set srcrate 1
+
+
+set nps 6000
+set seed  42
+% set acelib  "/global/home/groups/co_nuclear/serpent/xsdata/endfb7/sss_endfb7u.xsdata" "/global/home/groups/co_nuclear/serpent_photon_data/mcplib.xsdata"
+% set declib  "/global/home/groups/co_nuclear/serpent/xsdata/endfb7/sss_endfb7.dec"
+set pdatadir  "/global/home/groups/co_nuclear/serpent_photon_data/photon_data"
+set acelib "/global/scratch/users/co_nuclear/endf8/endf8.xsdata" "/global/home/groups/co_nuclear/serpent_photon_data/mcplib.xsdata"
+set declib "/global/scratch/users/co_nuclear/endf8/endf8.dec"
+set nfylib "/global/scratch/users/co_nuclear/endf8/endf8.nfy"
+%set nfylib  "/global/home/groups/co_nuclear/serpent/xsdata/endfb7/sss_endfb7.nfy"
+set opti  4
+set gcu  -1
+set repro  0
+set shbuf  0 0
+set ecut 1.0E-6 1.0E-6
+
+
+set bc 1
+plot 1 200 200
+plot 2 200 200
+plot 3 200 200
