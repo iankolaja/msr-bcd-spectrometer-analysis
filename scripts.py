@@ -2,51 +2,33 @@ import numpy as np
 import os
 import time
 from material import *
+import pandas as pd
 
 from scipy.stats import norm
 
-grid_file = "gadras_energy_grid.npy"
-ENERGY_GRID = np.load(grid_file)
+def read_single_gspec_individual(file_name):
+    gammas = []
+    with open(file_name, 'r') as f:
+        reading = False
+        for line in f:
+            if reading and next_empty:
+                next_empty = False
+            elif (len(line) < 2 and reading) or ("]" in line):
+                reading = False
+            elif reading:
+                line = line.split()
+                gamma_data = {
+                    "energy": float(line[4])*1000,
+                    "intensity": float(line[2])*float(line[5]),
+                    "isotope": isotope
+                }
+                gammas += [gamma_data]
+            if "discrete spectrum" in line:
+                reading = True
+                isotope = line.split(" ")[2]
+                next_empty = True
+    return pd.DataFrame(gammas)
 
-PEBBLE_FUEL_VOLUME = 0.36263376 #0.025**3*np.pi*4/3*8335
-
-#ENERGY_GRID = np.zeros(16001)
-#ENERGY_GRID[0:6001] = 0.00015*np.arange(6001)
-#ENERGY_GRID[6000:12001] = ENERGY_GRID[6000] + 0.0003*np.arange(6001)
-#ENERGY_GRID[12000:16001] = ENERGY_GRID[12000] + 0.0012*np.arange(4001)
-
-def run_pebble_decay_current_sample(source_energy, channel, template_path, energy_grid, num_cores,
-                              triso_file, particles, debug = 1, repeat_calc = False):
-    # Create a set of materials and dummy-geometry spheres to insert into 
-    # Serpent template
-    start_time = time.time()
-
-
-    det_file = f"decay_current_channel_{channel}.serpent_det0.m"
-    
-    if os.path.isfile(det_file) and not repeat_calc:
-        print(f"Energy {source_energy} MeV already simulated. Skipping...")
-        return det_file
-    
-    
-
-
-    with open(template_path, 'r') as f:
-        decay_input_s = f.read()
-
-    decay_input_s += f"ene detector_grid 1 {np.array2string(energy_grid,threshold=32000,precision=10)[1:-1]}\n"
-    decay_input_s += f"set dspec detector_grid detector_grid"
-    decay_input_s = decay_input_s.replace("<particles>",str(particles))
-    decay_input_s = decay_input_s.replace("<triso_file>",str(triso_file))
-    decay_input_s = decay_input_s.replace("<energy>", str(source_energy))
-
-
-    decay_file_name = f"decay_current_channel_{channel}.serpent"
-    with open(decay_file_name, 'w') as f:
-        f.write(decay_input_s)
-    os.system(f"sss2_HxF_dev {decay_file_name} -omp {num_cores}")
-
-    return det_file
 
 
 def read_current_det_file(file_name, energy_midpoints, detector_name="current"):
@@ -107,182 +89,26 @@ def rename_ZAI_columns(dataframe):
 
     return renamed_dataframe
 
+
 def natural_sort(l): 
     convert = lambda text: int(text) if text.isdigit() else text.lower()
     alphanum_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
     return sorted(l, key=alphanum_key)
 
+def read_bandpass_filter(file_name):
+    data = pd.read_csv(file_name)
+    energy = data[' Energy [eV]']/1000
+    counts = data['Number of Rays weighted by $\Vert\mathbf{E_{\sigma}}+\mathbf{E_{\pi}}\Vert^2$']
+    energy_step = energy.iloc[1] - energy.iloc[0]
+    energy = np.insert(energy, 0, energy[0]-energy_step)
+    energy = np.append(energy, energy[-1]+energy_step)
+    
+    counts = np.insert(counts, 0, 0)
+    counts = np.append(counts, 0)
 
-# Function to read a restart file and extract material data. Can put any ZAI in ZAI_fields, or one/multiple of the following in nonZAI_fiels: n, name, bu_global, bu_days, nnuc, adens, mdens, burnup 
-def read_restart(list_paths, step=0, mat_parent=None, nonZAI_fields=['burnup'], ZAI_fields=[], df=True, min_ZAI_adens=None, parent_only=False, printing=True):
-    '''
-    Function by Yves to extract materials from a restart file.
-    '''
-    if isinstance(list_paths, str):
-        list_paths = [list_paths]
-    materials = dict()
-    ZAI_indices = []
-    for path_to_file in list_paths:
-        if printing:
-            print(path_to_file)
-        current_step = -1
-        burnups = dict()
-        # Read restart file
-        with open(path_to_file, mode='rb') as file:  # b is important -> binary
-            while True:
-                s = file.read(8)
-                if not s:
-                    break
-                material = {}
-                material['n'] = struct.unpack("q", s)[0]  # length of material name
-                material['name'] = struct.unpack("{}s".format(material['n']), file.read(material['n']))[0].decode('UTF-8') # material name
-                material['bu_global'] = struct.unpack("d", file.read(8))[0] # BU of snapshot
-                material['bu_days'] = struct.unpack("d", file.read(8))[0] # time of snapshot
-                material['nnuc'] = struct.unpack("q", file.read(8))[0] # Number of nuclides in material
-                material['adens'] = struct.unpack("d", file.read(8))[0] # Atomic density of material
-                material['mdens'] = struct.unpack("d", file.read(8))[0] # Mass density of material
-                material['burnup'] = struct.unpack("d", file.read(8))[0] # Burnup of material
-                if len(burnups) == 0 or material['bu_global'] != burnups[list(burnups.keys())[-1]]:
-                    current_step += 1
-                    burnups[current_step] = material['bu_global']
-
-                # Check if material name matches
-                if mat_parent and ((not parent_only and material['name'][:min(len(mat_parent), len(material['name']))+1] != f'{mat_parent}z') or current_step != step):
-                    # Seek to the next block by calculating the number of bytes to skip
-                    bytes_to_skip = 16 * material['nnuc']  # Size of the data block (16 bytes for each nuclide)
-                    file.seek(bytes_to_skip, 1)  # Move the file pointer forward by the calculated number of bytes
-                    continue
-
-                materials[material['name']] = {field: material[field] for field in nonZAI_fields}
-                if len(ZAI_fields)==0:
-                    # Seek to the next block by calculating the number of bytes to skip
-                    file.seek(16 * material['nnuc'], 1)  # Move the file pointer forward by the calculated number of bytes
-                    continue
-
-                # Just once
-                if len(ZAI_indices) == 0:
-                    adens_list = []
-                    ZAI_list = []
-                    for i in range(material['nnuc']):
-                        ZAI, adens = struct.unpack("qd", file.read(16))
-                        ZAI_list.append(ZAI)
-                        adens_list.append(adens)
-                    if isinstance(ZAI_fields, str) and ZAI_fields=='all':
-                        ZAI_indices = range(len(ZAI_list))
-                        ZAI_fields = ZAI_list
-                    else:
-                        ZAI_indices = [ZAI_list.index(int(ZAI)) for ZAI in ZAI_fields]
-                    ZAI_indices, ZAI_fields = zip(*sorted(zip(ZAI_indices, ZAI_fields)))
-                    ZAI_empty = {key: True for key in ZAI_fields}
-                    for i, index in enumerate(ZAI_indices):
-                        if not min_ZAI_adens or adens_list[index] > min_ZAI_adens: 
-                            materials[material['name']][int(ZAI_fields[i])] = adens_list[index]
-                            ZAI_empty[int(ZAI_fields[i])] = False
-                        
-                # The rest of the cases
-                else:
-                    last_index = 0
-                    for i in range(len(ZAI_fields)):
-                        index = ZAI_indices[i]
-                        file.seek(16*(index-last_index), 1)
-                        ZAI, adens = struct.unpack("qd", file.read(16))
-                        if not min_ZAI_adens or adens > min_ZAI_adens:
-                            materials[material['name']][int(ZAI)] = adens
-                            ZAI_empty[int(ZAI)] = False
-                        last_index = int(index)+1
-                    file.seek(16*(material['nnuc']-last_index), 1)
-        
-    if df:
-        materials = pd.DataFrame.from_dict(materials, orient='index')
-        materials = materials.fillna(0).loc[natural_sort(materials.index)]
-    else:
-        materials = {key: materials[key] for key in natural_sort(materials)}
-    return materials
-    
-def run_one_pebble_decay(conc_dict, pebble_id, decay_template_path, gamma_template_path,
-                                energy_grid, decay_days, decay_days_unc, num_cores,
-                                triso_file, particles, debug = 1, repeat_calc = True):
-    # Create a set of materials and dummy-geometry spheres to insert into 
-    # Serpent template
-    start_time = time.time()
-    num_day_steps = len(decay_days)+1
-    gsrc_files = []
-    decay_days = [0] + decay_days
-    decay_days_unc = [0] + decay_days_unc
-    gspec_dict = {}
-    for t in range(num_day_steps):
-        day = decay_days[t]
-        gsrc_files += [f"decay_{pebble_id}_step2_{round(day,3)}d.serpent_gsrc.m"]
-    
-    if os.path.isfile(gsrc_files[-1]) and not repeat_calc:
-        print(f"Pebble {pebble_id} already simulated. Skipping...")
-        for t in range(num_day_steps):
-            day = decay_days[t]
-            gspec_dict[day] = read_single_gspec(gsrc_files[t], energy_grid)
-        return gspec_dict
-            
-    
-    
-
-    # STEP 1: Decay of pebble nuclides
-    mat_s = ""
-
-    mat_s += Material("decay0_R1Z1G1", conc_dict).write_input(1, {}, 1, 
-                        volume=PEBBLE_FUEL_VOLUME, never_burn=False)
-
-    
-    with open(decay_template_path, 'r') as f:
-        decay1_input_s = f.read()
-
-    decay1_input_s = decay1_input_s.replace("<triso_file>",str(triso_file))
-    
-    day_array = []
-    
-    for t in range(1,len(decay_days)):
-        mean = decay_days[t]
-        std = decay_days_unc[t]
-        day_array += [str(round(norm(mean, std).rvs(),6))]
-    
-    decay1_input_s = decay1_input_s.replace("<days>"," ".join(day_array))
-    decay1_input_s += "\n%%% Decay Input Definitions %%%\n\n"
-    decay1_input_s += mat_s
-    
-    decay1_file_name = f"decay_{pebble_id}_step1.serpent"
-    with open(decay1_file_name, 'w') as f:
-        f.write(decay1_input_s)
-    os.system(f"sss2_HxF_dev {decay1_file_name} -omp {num_cores}")
-    
-    post_decay_concentrations = {}
-    for i in range(num_day_steps):
-        
-        post_decay_concentrations[decay_days[i]] = extract_from_bumat(f"{decay1_file_name}.bumat{i}")[0]
+    return pd.DataFrame({"energy":energy, "counts": counts})
 
 
-    # STEP 2: Gamma Transport To Surface
-    
-    for t in range(num_day_steps):
-        day = decay_days[t]
-        
-        mat_s = Material(f"decay0_R1Z1G1", post_decay_concentrations[day]).write_input(1, {}, 1, 
-                            volume=PEBBLE_FUEL_VOLUME, never_burn=True)
-    
-        with open(gamma_template_path, 'r') as f:
-            decay2_input_s = f.read()
-        
-        decay2_input_s += f"ene detector_grid 1 {np.array2string(energy_grid,threshold=32000,precision=10)[1:-1]}\n"
-        decay2_input_s += f"set dspec detector_grid detector_grid"
-        decay2_input_s = decay2_input_s.replace("<particles>",str(particles))
-        decay2_input_s = decay2_input_s.replace("<triso_file>",str(triso_file))
-
-        decay2_input_s += "\n%%% Decay Input Definitions %%%\n\n"
-        decay2_input_s += mat_s
-        
-        decay2_file_name = f"decay_{pebble_id}_step2_{round(day,3)}d.serpent"
-        with open(decay2_file_name, 'w') as f:
-            f.write(decay2_input_s)
-        os.system(f"sss2_HxF_dev {decay2_file_name} -omp {num_cores}")
-        gspec_dict[day] = read_single_gspec(decay2_file_name+"_gsrc.m", energy_grid)
-    return gspec_dict
 
 def read_single_gspec(file_name, energy_spectrum):
     results = {}
